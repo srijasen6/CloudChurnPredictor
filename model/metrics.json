@@ -1,1 +1,1 @@
-{"accuracy": 0.85, "precision": 0.82, "recall": 0.78, "f1": 0.8, "auc_roc": 0.88, "confusion_matrix": [[45, 5], [10, 40]]}
+{"accuracy": 0.85, "precision": 0.7777777777777778, "recall": 0.875, "f1": 0.8235294117647058, "auc_roc": 0.8020833333333334, "confusion_matrix": [[10, 2], [1, 7]]}
