@@ -1,0 +1,240 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark">
+                <h2 class="card-title mb-0"><i class="fas fa-chart-line me-2"></i> Customer Churn Prediction</h2>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    Enter customer information to predict the likelihood of churn. The model will analyze the data
+                    and provide a prediction based on patterns learned from historical customer behavior.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if prediction is defined %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark">
+                <h3 class="card-title mb-0"><i class="fas fa-poll me-2"></i> Prediction Results</h3>
+            </div>
+            <div class="card-body">
+                <div class="prediction-result {% if prediction == 1 %}negative{% else %}positive{% endif %}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h4 class="mb-3">
+                                {% if prediction == 1 %}
+                                    <i class="fas fa-exclamation-triangle text-danger me-2"></i> High Risk of Churn
+                                {% else %}
+                                    <i class="fas fa-check-circle text-success me-2"></i> Low Risk of Churn
+                                {% endif %}
+                            </h4>
+                            <p class="mb-4">
+                                The model predicts that this customer
+                                {% if prediction == 1 %}
+                                    <strong class="text-danger">is likely to churn</strong>.
+                                {% else %}
+                                    <strong class="text-success">is likely to remain</strong>.
+                                {% endif %}
+                            </p>
+                            
+                            <h5>Churn Probability</h5>
+                            <div class="progress mb-3">
+                                <div class="progress-bar {% if probability > 50 %}bg-danger{% else %}bg-success{% endif %}" 
+                                     role="progressbar" 
+                                     style="width: {{ probability }}%" 
+                                     aria-valuenow="{{ probability }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ probability }}%
+                                </div>
+                            </div>
+                            
+                            {% if prediction == 1 %}
+                            <div class="alert alert-warning mt-3">
+                                <h5><i class="fas fa-lightbulb me-2"></i> Recommended Actions:</h5>
+                                <ul class="mb-0">
+                                    <li>Reach out to the customer with a special retention offer</li>
+                                    <li>Schedule a follow-up call to address any concerns</li>
+                                    <li>Consider a loyalty program enrollment</li>
+                                </ul>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Key Risk Factors</h5>
+                            
+                            <ul class="list-group">
+                                {% if customer_data.contract_type == 'Month-to-month' %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Month-to-month Contract
+                                    <span class="badge bg-danger rounded-pill">High Risk</span>
+                                </li>
+                                {% endif %}
+                                
+                                {% if customer_data.tenure < 12 %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Short Tenure ({{ customer_data.tenure }} months)
+                                    <span class="badge bg-danger rounded-pill">High Risk</span>
+                                </li>
+                                {% endif %}
+                                
+                                {% if customer_data.monthly_charges > 70 %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    High Monthly Charges (${{ "%.2f"|format(customer_data.monthly_charges) }})
+                                    <span class="badge bg-warning text-dark rounded-pill">Medium Risk</span>
+                                </li>
+                                {% endif %}
+                                
+                                {% if customer_data.payment_method == 'Electronic check' %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Electronic Check Payment Method
+                                    <span class="badge bg-warning text-dark rounded-pill">Medium Risk</span>
+                                </li>
+                                {% endif %}
+                                
+                                {% if customer_data.internet_service == 'Fiber optic' %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Fiber Optic Internet Service
+                                    <span class="badge bg-warning text-dark rounded-pill">Medium Risk</span>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-dark">
+                <h3 class="card-title mb-0"><i class="fas fa-user me-2"></i> Customer Information</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/predict">
+                    <div class="row">
+                        <!-- Numerical Features -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Customer Profile</h5>
+                            
+                            <div class="mb-3">
+                                <label for="tenure" class="form-label">Tenure (months)</label>
+                                <input type="number" class="form-control" id="tenure" name="tenure" min="0" max="120" value="{{ customer_data.tenure if customer_data is defined else 12 }}" required>
+                                <div class="form-text">How long has the customer been with the company (in months)</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="monthly_charges" class="form-label">Monthly Charges ($)</label>
+                                <input type="number" step="0.01" class="form-control" id="monthly_charges" name="monthly_charges" min="0" value="{{ customer_data.monthly_charges if customer_data is defined else 65.5 }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="total_charges" class="form-label">Total Charges ($)</label>
+                                <input type="number" step="0.01" class="form-control" id="total_charges" name="total_charges" min="0" value="{{ customer_data.total_charges if customer_data is defined else 786.0 }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="age" class="form-label">Age</label>
+                                <input type="number" class="form-control" id="age" name="age" min="18" max="120" value="{{ customer_data.age if customer_data is defined else 35 }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="number_of_dependents" class="form-label">Number of Dependents</label>
+                                <input type="number" class="form-control" id="number_of_dependents" name="number_of_dependents" min="0" max="10" value="{{ customer_data.number_of_dependents if customer_data is defined else 0 }}" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="number_of_referrals" class="form-label">Number of Referrals</label>
+                                <input type="number" class="form-control" id="number_of_referrals" name="number_of_referrals" min="0" max="20" value="{{ customer_data.number_of_referrals if customer_data is defined else 0 }}" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Categorical Features -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Service Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="gender" class="form-label">Gender</label>
+                                <select class="form-select" id="gender" name="gender" required>
+                                    <option value="Male" {% if customer_data is defined and customer_data.gender == 'Male' %}selected{% endif %}>Male</option>
+                                    <option value="Female" {% if customer_data is defined and customer_data.gender == 'Female' %}selected{% endif %}>Female</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="contract_type" class="form-label">Contract Type</label>
+                                <select class="form-select" id="contract_type" name="contract_type" required>
+                                    <option value="Month-to-month" {% if customer_data is defined and customer_data.contract_type == 'Month-to-month' %}selected{% endif %}>Month-to-month</option>
+                                    <option value="One year" {% if customer_data is defined and customer_data.contract_type == 'One year' %}selected{% endif %}>One year</option>
+                                    <option value="Two year" {% if customer_data is defined and customer_data.contract_type == 'Two year' %}selected{% endif %}>Two year</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="payment_method" class="form-label">Payment Method</label>
+                                <select class="form-select" id="payment_method" name="payment_method" required>
+                                    <option value="Electronic check" {% if customer_data is defined and customer_data.payment_method == 'Electronic check' %}selected{% endif %}>Electronic check</option>
+                                    <option value="Mailed check" {% if customer_data is defined and customer_data.payment_method == 'Mailed check' %}selected{% endif %}>Mailed check</option>
+                                    <option value="Bank transfer (automatic)" {% if customer_data is defined and customer_data.payment_method == 'Bank transfer (automatic)' %}selected{% endif %}>Bank transfer (automatic)</option>
+                                    <option value="Credit card (automatic)" {% if customer_data is defined and customer_data.payment_method == 'Credit card (automatic)' %}selected{% endif %}>Credit card (automatic)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="internet_service" class="form-label">Internet Service</label>
+                                <select class="form-select" id="internet_service" name="internet_service" required>
+                                    <option value="DSL" {% if customer_data is defined and customer_data.internet_service == 'DSL' %}selected{% endif %}>DSL</option>
+                                    <option value="Fiber optic" {% if customer_data is defined and customer_data.internet_service == 'Fiber optic' %}selected{% endif %}>Fiber optic</option>
+                                    <option value="No" {% if customer_data is defined and customer_data.internet_service == 'No' %}selected{% endif %}>No internet service</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mt-5">
+                                <button type="submit" class="btn btn-info btn-lg w-100">
+                                    <i class="fas fa-calculator me-2"></i> Predict Churn Probability
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Calculate total charges based on tenure and monthly charges
+    document.addEventListener('DOMContentLoaded', function() {
+        const tenureInput = document.getElementById('tenure');
+        const monthlyChargesInput = document.getElementById('monthly_charges');
+        const totalChargesInput = document.getElementById('total_charges');
+        
+        // Helper function to update total charges
+        const updateTotalCharges = () => {
+            const tenure = parseFloat(tenureInput.value) || 0;
+            const monthlyCharges = parseFloat(monthlyChargesInput.value) || 0;
+            
+            const calculatedTotal = tenure * monthlyCharges;
+            totalChargesInput.value = calculatedTotal.toFixed(2);
+        };
+        
+        // Set up event listeners to recalculate
+        tenureInput.addEventListener('input', updateTotalCharges);
+        monthlyChargesInput.addEventListener('input', updateTotalCharges);
+    });
+</script>
+{% endblock %}

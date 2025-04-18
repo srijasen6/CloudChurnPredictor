@@ -1,0 +1,113 @@
+/* Custom styling for the churn prediction application */
+
+/* Use bootstrap variables for consistent theming */
+:root {
+  --primary-color: var(--bs-info);
+  --secondary-color: var(--bs-secondary);
+  --accent-color: var(--bs-primary);
+}
+
+/* Enhance card display */
+.feature-card {
+  transition: transform 0.3s ease;
+  margin-bottom: 1rem;
+  height: 100%;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,.1);
+}
+
+/* Style for prediction results */
+.prediction-result {
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+  background-color: rgba(var(--bs-secondary-rgb), 0.1);
+}
+
+.prediction-result.positive {
+  background-color: rgba(var(--bs-success-rgb), 0.1);
+  border-left: 5px solid var(--bs-success);
+}
+
+.prediction-result.negative {
+  background-color: rgba(var(--bs-danger-rgb), 0.1);
+  border-left: 5px solid var(--bs-danger);
+}
+
+/* Progress bar styling */
+.progress {
+  height: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Feature importance bars */
+.feature-importance-bar {
+  height: 25px;
+  margin-bottom: 10px;
+  position: relative;
+  background-color: rgba(var(--bs-info-rgb), 0.3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.feature-importance-bar .bar {
+  position: absolute;
+  height: 100%;
+  background-color: var(--bs-info);
+  left: 0;
+  top: 0;
+}
+
+.feature-importance-bar .label {
+  position: absolute;
+  left: 10px;
+  top: 3px;
+  z-index: 1;
+  color: var(--bs-dark);
+  font-weight: 500;
+}
+
+.feature-importance-bar .value {
+  position: absolute;
+  right: 10px;
+  top: 3px;
+  z-index: 1;
+  font-weight: 700;
+}
+
+/* Dashboard metrics */
+.metric-card {
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  background-color: rgba(var(--bs-dark-rgb), 0.05);
+  height: 100%;
+}
+
+.metric-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--bs-info);
+}
+
+.metric-label {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .metric-value {
+    font-size: 2rem;
+  }
+  
+  .feature-importance-bar {
+    height: 30px;
+  }
+}

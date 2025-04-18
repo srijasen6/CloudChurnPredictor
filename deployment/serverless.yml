@@ -1,0 +1,63 @@
+service: churn-prediction-api
+
+provider:
+  name: aws
+  runtime: python3.9
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  memorySize: 1024
+  timeout: 30
+  environment:
+    STAGE: ${self:provider.stage}
+    REGION: ${self:provider.region}
+    MODEL_BUCKET: ${opt:model-bucket, 'churn-prediction-models'}
+    MODEL_KEY: ${opt:model-key, 'model.pkl'}
+    PREPROCESSOR_KEY: ${opt:preprocessor-key, 'preprocessor.pkl'}
+
+functions:
+  predict:
+    handler: handler.predict
+    events:
+      - http:
+          path: predict
+          method: post
+          cors: true
+  
+  batch-predict:
+    handler: handler.batch_predict
+    events:
+      - http:
+          path: batch-predict
+          method: post
+          cors: true
+  
+  info:
+    handler: handler.info
+    events:
+      - http:
+          path: info
+          method: get
+          cors: true
+
+package:
+  individually: true
+  exclude:
+    - '**/*'
+  include:
+    - handler.py
+    - utils/**
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    layer: true
+    slim: true
+    noDeploy:
+      - pytest
+      - pytest-cov
+    useDownloadCache: true
+    useStaticCache: true
+    zip: true

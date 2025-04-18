@@ -1,0 +1,249 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card bg-dark">
+            <div class="card-body">
+                <h1 class="card-title">
+                    <i class="fas fa-cloud me-2"></i> Multi-Cloud Data Pipeline for Customer Churn Prediction
+                </h1>
+                <p class="card-text lead">
+                    A serverless pipeline that extracts data from AWS S3 and Google BigQuery, processes it using Prefect,
+                    trains an XGBoost model with Optuna for hyperparameter tuning, and deploys it as a serverless API.
+                </p>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <form action="/extract" method="post">
+                            <button type="submit" class="btn btn-info btn-lg w-100">
+                                <i class="fas fa-cloud-download-alt me-2"></i> Extract Data
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <form action="/train" method="post">
+                            <button type="submit" class="btn btn-secondary btn-lg w-100">
+                                <i class="fas fa-cogs me-2"></i> Train Model
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Only show metrics if model exists -->
+{% if model_exists %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-3"><i class="fas fa-chart-bar me-2"></i> Model Performance</h2>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ "%.2f"|format(metrics.accuracy * 100) }}%</div>
+            <div class="metric-label">Accuracy</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ "%.2f"|format(metrics.precision * 100) }}%</div>
+            <div class="metric-label">Precision</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ "%.2f"|format(metrics.recall * 100) }}%</div>
+            <div class="metric-label">Recall</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="metric-card">
+            <div class="metric-value">{{ "%.2f"|format(metrics.auc_roc * 100) }}%</div>
+            <div class="metric-label">AUC-ROC</div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-7">
+        <div class="card h-100">
+            <div class="card-header bg-dark">
+                <h4 class="card-title mb-0"><i class="fas fa-weight me-2"></i> Feature Importance</h4>
+            </div>
+            <div class="card-body">
+                {% if feature_importance %}
+                    {% for feature, importance in feature_importance.items() %}
+                        <div class="feature-importance-bar">
+                            <div class="bar" style="width: {{ importance * 100 }}%"></div>
+                            <span class="label">{{ feature }}</span>
+                            <span class="value">{{ "%.3f"|format(importance) }}</span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>Feature importance data not available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+        <div class="card h-100">
+            <div class="card-header bg-dark">
+                <h4 class="card-title mb-0"><i class="fas fa-table me-2"></i> Confusion Matrix</h4>
+            </div>
+            <div class="card-body">
+                {% if metrics and metrics.confusion_matrix %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Predicted: No Churn</th>
+                                <th>Predicted: Churn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th>Actual: No Churn</th>
+                                <td class="text-success fw-bold">{{ metrics.confusion_matrix[0][0] }}</td>
+                                <td class="text-danger">{{ metrics.confusion_matrix[0][1] }}</td>
+                            </tr>
+                            <tr>
+                                <th>Actual: Churn</th>
+                                <td class="text-danger">{{ metrics.confusion_matrix[1][0] }}</td>
+                                <td class="text-success fw-bold">{{ metrics.confusion_matrix[1][1] }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    <h5>Interpretation:</h5>
+                    <ul>
+                        <li>True Negatives: {{ metrics.confusion_matrix[0][0] }}</li>
+                        <li>False Positives: {{ metrics.confusion_matrix[0][1] }}</li>
+                        <li>False Negatives: {{ metrics.confusion_matrix[1][0] }}</li>
+                        <li>True Positives: {{ metrics.confusion_matrix[1][1] }}</li>
+                    </ul>
+                </div>
+                {% else %}
+                <p>Confusion matrix data not available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i> No trained model found. Please extract data and train a model to see performance metrics.
+</div>
+{% endif %}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-3"><i class="fas fa-cogs me-2"></i> Pipeline Architecture</h2>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card feature-card">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0"><i class="fas fa-cloud-download-alt me-2"></i> Data Extraction</h5>
+            </div>
+            <div class="card-body">
+                <p>Extract customer data from multiple cloud sources:</p>
+                <ul>
+                    <li><i class="fab fa-aws me-2"></i> AWS S3 for customer profiles</li>
+                    <li><i class="fab fa-google me-2"></i> Google BigQuery for transaction data</li>
+                </ul>
+                <p>The pipeline orchestrates data extraction using Prefect, ensuring reliable and monitored workflows.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card feature-card">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0"><i class="fas fa-wrench me-2"></i> Feature Engineering</h5>
+            </div>
+            <div class="card-body">
+                <p>Transform raw data into predictive features:</p>
+                <ul>
+                    <li>Data cleaning and preprocessing</li>
+                    <li>Feature creation and transformation</li>
+                    <li>Encoding categorical variables</li>
+                    <li>Scaling numerical features</li>
+                </ul>
+                <p>Custom feature engineering to maximize predictive power for churn prediction.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card feature-card">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0"><i class="fas fa-brain me-2"></i> Model Training</h5>
+            </div>
+            <div class="card-body">
+                <p>Train state-of-the-art machine learning models:</p>
+                <ul>
+                    <li>XGBoost gradient boosting for high performance</li>
+                    <li>Optuna for automated hyperparameter tuning</li>
+                    <li>Cross-validation for reliable evaluation</li>
+                </ul>
+                <p>Optimize model performance for accurate churn prediction using advanced techniques.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card feature-card">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0"><i class="fas fa-server me-2"></i> Serverless Deployment</h5>
+            </div>
+            <div class="card-body">
+                <p>Deploy models as scalable, cost-effective serverless functions:</p>
+                <ul>
+                    <li>AWS Lambda for serverless API hosting</li>
+                    <li>Automatic scaling based on request volume</li>
+                    <li>Low operational overhead with pay-per-use pricing</li>
+                </ul>
+                <p>Make the model accessible through a REST API for real-time predictions.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card feature-card">
+            <div class="card-header bg-dark">
+                <h5 class="card-title mb-0"><i class="fas fa-tasks me-2"></i> Workflow Orchestration</h5>
+            </div>
+            <div class="card-body">
+                <p>Manage end-to-end pipeline with Prefect:</p>
+                <ul>
+                    <li>Automated workflow scheduling</li>
+                    <li>Dependency management between tasks</li>
+                    <li>Error handling and retry mechanisms</li>
+                    <li>Monitoring and notification capabilities</li>
+                </ul>
+                <p>Ensure reliable, observable, and maintainable data pipelines.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add any JavaScript needed for the dashboard
+    document.addEventListener('DOMContentLoaded', function() {
+        // Nothing to initialize at this time
+    });
+</script>
+{% endblock %}
